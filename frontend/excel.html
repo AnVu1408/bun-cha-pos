@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel View - Bun Cha POS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <!-- Fixed Header -->
+    <header class="bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg fixed top-0 left-0 right-0 z-50">
+        <div class="px-6 py-3 flex items-center justify-between">
+            <!-- Restaurant Name -->
+            <div class="flex-1">
+                <h1 class="text-xl tracking-wide font-semibold">Bún chả Hà Nội</h1>
+                <p class="text-blue-200 text-xs">Minh Hương</p>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex gap-3">
+                <a href="/tables.html" class="flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all bg-blue-800/50 hover:bg-blue-700/70">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span>Waiter</span>
+                </a>
+                <a href="/kitchen.html" class="flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all bg-blue-800/50 hover:bg-blue-700/70">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span>Kitchen</span>
+                </a>
+                <a href="/excel.html" class="flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all bg-blue-700 shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Excel</span>
+                </a>
+            </nav>
+
+            <!-- Connection Status -->
+            <div id="connection-status" class="flex items-center gap-2 px-3 py-1.5 bg-blue-800 rounded-full text-xs">
+                <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                <span class="text-blue-100">Connected</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-20 px-6 pb-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Page Header -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800">📊 Excel Data Viewer</h1>
+                        <p class="text-slate-500">Real-time view of orders and timestamps</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div id="last-update" class="text-sm text-slate-400">Loading...</div>
+                        <button onclick="downloadExcel()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            📥 Download Excel
+                        </button>
+                        <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timestamps Section -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">📋 Timestamps (All Actions)</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Time</th>
+                                <th class="px-4 py-2 text-left">Order ID</th>
+                                <th class="px-4 py-2 text-left">Table</th>
+                                <th class="px-4 py-2 text-left">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timestamps-body" class="divide-y divide-slate-200">
+                            <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">🍽️ Active Orders</h2>
+                <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <p class="text-slate-400 col-span-full">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Daily Summary -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4">📈 Today's Summary</h2>
+                <div id="summary-container" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <p class="text-slate-400 col-span-full">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var API_BASE = 'http://localhost:3003';
+        var socket;
+        var lastUpdate = null;
+
+        function initSocket() {
+            socket = io('http://localhost:3003');
+            var statusEl = document.getElementById('connection-status');
+
+            socket.on('connect', function() {
+                statusEl.innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full"></span><span class="text-blue-100">Live</span>';
+            });
+
+            socket.on('disconnect', function() {
+                statusEl.innerHTML = '<span class="w-2 h-2 bg-amber-400 rounded-full"></span><span class="text-blue-200">Reconnecting...</span>';
+            });
+
+            // Auto-refresh on any order update
+            socket.on('new_order', refreshData);
+            socket.on('order_served', refreshData);
+            socket.on('order_served_update', refreshData);
+            socket.on('order_paid', refreshData);
+            socket.on('orders_update', refreshData);
+        }
+
+        async function refreshData() {
+            try {
+                // Fetch timestamps
+                const tsRes = await fetch(API_BASE + '/api/timestamps');
+                const timestamps = await tsRes.json();
+                renderTimestamps(timestamps);
+
+                // Fetch active orders
+                const ordersRes = await fetch(API_BASE + '/api/orders/active');
+                const orders = await ordersRes.json();
+                renderOrders(orders);
+
+                // Fetch today's summary
+                const summaryRes = await fetch(API_BASE + '/api/summary/today');
+                const summary = await summaryRes.json();
+                renderSummary(summary);
+
+                // Update last update time
+                lastUpdate = new Date();
+                document.getElementById('last-update').textContent = 'Last update: ' + lastUpdate.toLocaleTimeString('vi-VN');
+
+            } catch (err) {
+                console.error('Error loading data:', err);
+            }
+        }
+
+        function renderTimestamps(timestamps) {
+            const tbody = document.getElementById('timestamps-body');
+
+            if (!timestamps || timestamps.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">No data yet</td></tr>';
+                return;
+            }
+
+            // Sort by time (newest first)
+            timestamps.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            tbody.innerHTML = timestamps.map(ts => {
+                const statusColors = {
+                    'ordered': 'bg-blue-100 text-blue-800',
+                    'pending': 'bg-yellow-100 text-yellow-800',
+                    'served': 'bg-green-100 text-green-800',
+                    'paid': 'bg-purple-100 text-purple-800',
+                    'finished': 'bg-gray-100 text-gray-800'
+                };
+                const colorClass = statusColors[ts.status] || 'bg-slate-100 text-slate-800';
+
+                return `
+                    <tr>
+                        <td class="px-4 py-2 font-mono text-xs">${formatTime(ts.timestamp)}</td>
+                        <td class="px-4 py-2 font-mono text-xs">${ts.order_id}</td>
+                        <td class="px-4 py-2">${ts.table}</td>
+                        <td class="px-4 py-2"><span class="px-2 py-1 rounded text-xs font-medium ${colorClass}">${ts.status.toUpperCase()}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('orders-container');
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 col-span-full">No active orders</p>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => {
+                const itemsList = (order.items || []).map(item =>
+                    `${item.item_name} x${item.qty}`
+                ).join(', ');
+
+                return `
+                    <div class="border border-slate-200 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="font-semibold text-slate-800">${order.table}</span>
+                                <span class="text-xs text-slate-500 ml-2">${order.order_id}</span>
+                            </div>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">${order.status}</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-2">${itemsList}</p>
+                        <p class="font-semibold text-slate-800">${formatMoney(order.order_total)}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSummary(summary) {
+            const container = document.getElementById('summary-container');
+
+            const metrics = [
+                { label: 'Total Orders', value: summary.total_orders || 0, color: 'bg-blue-50 text-blue-800' },
+                { label: 'Total Revenue', value: formatMoney(summary.total_money || 0), color: 'bg-green-50 text-green-800' },
+                { label: 'Dine In', value: summary.dine_in_orders || 0, color: 'bg-purple-50 text-purple-800' },
+                { label: 'Takeaway', value: summary.takeaway_orders || 0, color: 'bg-orange-50 text-orange-800' },
+                { label: 'Goka (Delivery)', value: summary.goka_orders || 0, color: 'bg-pink-50 text-pink-800' }
+            ];
+
+            container.innerHTML = metrics.map(m => `
+                <div class="p-4 rounded-lg ${m.color}">
+                    <p class="text-sm font-medium opacity-75">${m.label}</p>
+                    <p class="text-2xl font-bold">${m.value}</p>
+                </div>
+            `).join('');
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('vi-VN') + ' ₫';
+        }
+
+        function downloadExcel() {
+            // Direct download approach - opens in new tab
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const filename = `bun-cha-pos-${dateStr}.xlsx`;
+
+            // Show loading message
+            showToast('⬇️ Downloading...');
+
+            // Use window.open for direct download
+            const downloadWindow = window.open(API_BASE + '/api/export/excel', '_blank');
+
+            // Check if popup was blocked
+            if (!downloadWindow || downloadWindow.closed || typeof downloadWindow.closed == 'undefined') {
+                // Fallback: create a hidden link and click it
+                const link = document.createElement('a');
+                link.href = API_BASE + '/api/export/excel';
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                setTimeout(() => {
+                    showToast('✅ Excel file downloaded: ' + filename);
+                }, 1000);
+            } else {
+                setTimeout(() => {
+                    downloadWindow.close();
+                    showToast('✅ Excel file downloaded: ' + filename);
+                }, 1000);
+            }
+        }
+
+        function showToast(message) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 px-6 py-3 bg-slate-800 text-white rounded-lg shadow-lg text-sm font-medium z-50 animate-pulse';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initSocket();
+            refreshData();
+            // Auto-refresh every 10 seconds
+            setInterval(refreshData, 10000);
+        });
+    </script>
+</body>
+</html>

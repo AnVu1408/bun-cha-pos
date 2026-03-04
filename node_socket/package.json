@@ -1,0 +1,17 @@
+{
+  "name": "bun-cha-socket-relay",
+  "version": "1.0.0",
+  "description": "Socket.IO relay server for Bun Cha POS",
+  "main": "socket_relay.js",
+  "scripts": {
+    "start": "node socket_relay.js",
+    "dev": "node socket_relay.js"
+  },
+  "keywords": ["socket.io", "pos", "relay"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.4"
+  }
+}

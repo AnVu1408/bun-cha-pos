@@ -1,0 +1,15 @@
+#!/bin/sh
+# Shell wrapper for R executable - PATCHED for user-local installation
+
+R_HOME_DIR=/Users/anvu/R-framework/R.framework/Versions/4.4-arm64/Resources
+R_HOME="${R_HOME_DIR}"
+export R_HOME
+R_SHARE_DIR=/Users/anvu/R-framework/R.framework/Versions/4.4-arm64/Resources/share
+export R_SHARE_DIR
+R_INCLUDE_DIR=/Users/anvu/R-framework/R.framework/Versions/4.4-arm64/Resources/include
+export R_INCLUDE_DIR
+R_DOC_DIR=/Users/anvu/R-framework/R.framework/Versions/4.4-arm64/Resources/doc
+export R_DOC_DIR
+
+# Run the actual R binary
+exec /Users/anvu/R-framework/R.framework/Versions/4.4-arm64/Resources/bin/exec/R "$@"

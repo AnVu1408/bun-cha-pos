@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Data files (will be generated at runtime)
+data/orders.json
+data/summaries.json
+data/.last-archive
+
+# Keep data directory structure
+!data/.gitkeep
+
+# Archive files
+data/archive/*.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
