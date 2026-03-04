@@ -5,7 +5,7 @@ A full-featured Point of Sale (POS) system for Bún Chả Hà Nội restaurant. 
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4.7+-black.svg)
 
-## ✨ Features
+## Features
 
 ### Order Management
 - 📋 Create, update, and track orders in real-time
@@ -32,7 +32,16 @@ A full-featured Point of Sale (POS) system for Bún Chả Hà Nội restaurant. 
 - 📝 **Waiter Page** - Create and edit orders
 - 📈 **Excel Page** - View summaries and export data
 
-## 🚀 Quick Start
+### Preview
+<img width="2880" height="1552" alt="image" src="https://github.com/user-attachments/assets/338385e0-ba15-47ad-b77b-3a6169e21853" />
+<img width="2880" height="1552" alt="image" src="https://github.com/user-attachments/assets/1e464950-2728-4640-b736-50ac91862ffa" />
+<img width="2860" height="1552" alt="image" src="https://github.com/user-attachments/assets/c45051e7-7c25-4201-8514-c16c5aad3424" />
+<img width="2770" height="668" alt="image" src="https://github.com/user-attachments/assets/4e076e29-f0c7-48a2-85fb-d86dd760801f" />
+<img width="2480" height="432" alt="image" src="https://github.com/user-attachments/assets/37f7bfe4-e325-4743-bcb4-fe2a69312be9" />
+
+
+
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+ installed
